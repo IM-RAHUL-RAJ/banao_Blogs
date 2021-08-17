@@ -1,18 +1,31 @@
 const express= require('express');
+const mongoose = require('mongoose');
 const path=require('path');
-const hbs=require('hbs');
+// const hbs=require('hbs');
+const ejs=require('ejs');
 require("./db/conn");
+const Article = require('./models/articles')
+const methodOverride = require('method-override');
+const articleRouter = require('./../routes/articles')
 
 const Register=require('./models/registers');
 
 const app=express();
-const static_path=path.join(__dirname,'../public');
-// console.log(path.join(__dirname,'../public'));
+app.use(methodOverride('_method'))
+
+// app.set("view engine","hbs");
+app.set("view engine","ejs");
 app.set('views', path.join(__dirname, '../views'));
+
+const static_path=path.join(__dirname,'../public');
 app.use(express.static(static_path));
 app.use(express.json());
 app.use(express.urlencoded({extended:false}));
-app.set("view engine","hbs");
+// console.log(path.join(__dirname,'../public'));
+
+
+
+
 
 
 app.get("/",(req,res)=>{
@@ -23,6 +36,7 @@ app.get("/",(req,res)=>{
 app.get("/forget",(req,res)=>{
     res.render("forget");
 })
+
 
 app.post("/forget",async(req,res)=>{
     try{
@@ -50,7 +64,23 @@ app.get("/register",(req,res)=>{
     res.render("register");
 })
 
-app.post("/home",async(req,res)=>{
+// app.get("/home",(req,res)=>{
+//     res.render('index.ejs');
+// })
+
+app.use('/articles', articleRouter)
+
+
+app.get('/articles', async (req, res) => {
+    const articles = await Article.find().sort({ createdAt: 'desc' })
+    res.render('articles/index', { articles: articles })
+  })
+
+app.post("/articles",async(req,res)=>{
+
+    
+
+    // res.render('posts/home',{posts:posts})
     try{
             const username=req.body.sign_username;
             const password=req.body.sign_password;
@@ -59,14 +89,18 @@ app.post("/home",async(req,res)=>{
 
             console.log(uname);
             if(uname.password===password){
-                res.status(201).render("home");
+
+                const articles = await Article.find().sort({ createdAt: 'desc' })
+                res.render('articles/index', { articles: articles })
+                // res.status(201).render("articles/index");
+                // res.render("articles/index.ejs",{posts:posts});
             }
             else{
                 res.send("<h1>Password/username did not match</h1>");
             }
     }
     catch(error){
-            console.log("invalid username/password");
+            res.send("invalid username/password");
         }
     
 })
@@ -93,6 +127,37 @@ app.post("/register",async(req,res)=>{
         res.status(400).send(error);
     }
 })
+
+
+
+// app.post('/home/new',async(req,res)=>{
+//     const post=new Post({
+//         title:req.body.title,
+//         description:req.body.description
+//     })
+
+
+
+//     try{
+//     await post.save();
+//     const posts=Post.find().toArray();  
+    
+    
+//     // const posts={
+//     //     title:postDetails.title,
+//     //     createdAt: postDetails.createdAt,
+//     //     description:postDetails.description
+//     // }
+//     res.render('posts/home.ejs',{posts:posts});
+//     }
+//     catch(e){
+//         res.send(e);
+        
+//     }
+// })
+
+
+
 
 
 app.listen(3000 || process.env.PORT, ()=>{
