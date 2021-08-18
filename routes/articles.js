@@ -22,6 +22,12 @@ router.post('/new', async (req, res, next) => {
   next()
 }, saveArticleAndRedirect('new'))
 
+router.post('/:slug', async (req, res, next) =>{
+    const article = await Article.findOne({ slug: req.params.slug })
+    if (article == null) res.redirect('/')
+    res.render('articles/show', { article: article })
+})
+
 router.put('/:id', async (req, res, next) => {
   req.article = await Article.findById(req.params.id)
   next()
